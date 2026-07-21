@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>案例展示 · 人生操作系统现状看板</title>
+<style>
+/* ========== 基础重置 & 变量 ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --c-primary: #2d6a4f;
+  --c-primary-light: #40916c;
+  --c-primary-lighter: #95d5b2;
+  --c-primary-bg: #d8f3dc;
+  --c-bg: #f8faf8;
+  --c-card: #ffffff;
+  --c-text: #1f2937;
+  --c-text-2: #6b7280;
+  --c-text-3: #9ca3af;
+  --c-border: #e5e7eb;
+  --c-shadow: rgba(0,0,0,0.04);
+  --c-red: #dc2626;
+  --c-red-bg: #fef2f2;
+  --c-red-border: #fecaca;
+  --c-orange: #ea580c;
+  --c-orange-bg: #fff7ed;
+  --c-orange-border: #fed7aa;
+  --c-yellow: #ca8a04;
+  --c-yellow-bg: #fefce8;
+  --c-yellow-border: #fde68a;
+  --c-green: #16a34a;
+  --c-green-bg: #f0fdf4;
+  --c-green-border: #bbf7d0;
+  --c-blue: #2563eb;
+  --c-blue-bg: #eff6ff;
+  --c-blue-border: #bfdbfe;
+  --c-purple: #7c3aed;
+  --c-purple-bg: #f5f3ff;
+  --c-purple-border: #c4b5fd;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --max-w: 800px;
+  --font: -apple-system, "PingFang SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: var(--font);
+  color: var(--c-text);
+  background: var(--c-bg);
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--c-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 20px; }
+
+/* ========== 导航栏 ========== */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--c-border);
+  padding: 12px 0;
+}
+.topnav-inner {
+  max-width: var(--max-w); margin: 0 auto; padding: 0 20px;
+  display: flex; align-items: center; gap: 8px; overflow-x: auto;
+  scrollbar-width: none;
+}
+.topnav-inner::-webkit-scrollbar { display: none; }
+.topnav-logo { font-weight: 700; font-size: 0.9rem; white-space: nowrap; margin-right: 12px; }
+.topnav-link {
+  font-size: 0.8rem; color: var(--c-text-2); white-space: nowrap;
+  padding: 4px 12px; border-radius: 100px; border: 1px solid var(--c-border);
+  transition: all 0.2s; cursor: pointer;
+}
+.topnav-link:hover { background: var(--c-primary-bg); color: var(--c-primary); border-color: var(--c-primary-lighter); text-decoration: none; }
+
+/* ========== 阅读进度条 ========== */
+.progress-bar {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 200;
+  background: linear-gradient(90deg, var(--c-primary), var(--c-primary-lighter));
+  width: 0%; transition: width 0.1s;
+}
+
+/* ========== 案例展示 Banner ========== */
+.case-banner {
+  text-align: center; padding: 10px;
+  background: var(--c-purple-bg); border-bottom: 1px solid var(--c-purple-border);
+  font-size: 0.78rem; color: var(--c-purple); font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* ========== Hero ========== */
+.hero {
+  text-align: center;
+  padding: 80px 24px 60px;
+  background: linear-gradient(180deg, var(--c-primary-bg) 0%, var(--c-bg) 100%);
+}
+.hero-date {
+  display: inline-block; font-size: 0.8rem; color: var(--c-primary);
+  background: var(--c-card); border: 1px solid var(--c-primary-lighter);
+  padding: 4px 16px; border-radius: 100px; margin-bottom: 24px;
+}
+.hero h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 800; margin-bottom: 12px; }
+.hero .tagline { font-size: 1rem; color: var(--c-text-2); max-width: 500px; margin: 0 auto; }
+.scroll-hint { margin-top: 40px; font-size: 0.8rem; color: var(--c-text-3); animation: bounce 2s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+/* ========== 通用 Section ========== */
+section { padding: 64px 0; }
+.section-label { text-align:center; font-size:0.8rem; color:var(--c-primary); margin-bottom:8px; letter-spacing:0.5px; }
+.section-title { text-align:center; font-size:clamp(1.3rem,3.5vw,1.7rem); font-weight:700; margin-bottom:40px; }
+.section-alt { background: var(--c-primary-bg); }
+
+/* ========== 状态卡片网格 ========== */
+.status-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;
+}
+.status-card {
+  background: var(--c-card); border: 1px solid var(--c-border); border-radius: var(--radius);
+  padding: 24px 20px; transition: box-shadow 0.3s, transform 0.2s;
+}
+.status-card:hover { box-shadow: 0 8px 24px var(--c-shadow); transform: translateY(-2px); }
+.status-card .icon { font-size: 1.5rem; margin-bottom: 10px; }
+.status-card .label { font-size: 0.8rem; color: var(--c-text-2); margin-bottom: 4px; }
+.status-card .name { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+
+/* 状态标签 */
+.tag { display:inline-block; font-size:0.75rem; font-weight:600; padding:3px 10px; border-radius:100px; }
+.tag-red { color:var(--c-red); background:var(--c-red-bg); border:1px solid var(--c-red-border); }
+.tag-orange { color:var(--c-orange); background:var(--c-orange-bg); border:1px solid var(--c-orange-border); }
+.tag-yellow { color:var(--c-yellow); background:var(--c-yellow-bg); border:1px solid var(--c-yellow-border); }
+.tag-green { color:var(--c-green); background:var(--c-green-bg); border:1px solid var(--c-green-border); }
+
+.status-card .desc { font-size:0.82rem; color:var(--c-text-2); margin-top:10px; line-height:1.6; }
+
+/* ========== 紧急度排名 ========== */
+.urgency-table {
+  background: var(--c-card); border: 1px solid var(--c-border); border-radius: var(--radius);
+  overflow: hidden;
+}
+.urgency-row {
+  display: grid; grid-template-columns: 44px 1fr 1fr 1.2fr; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--c-border);
+}
+.urgency-row:last-child { border-bottom: none; }
+.urgency-row.header { font-size:0.75rem; color:var(--c-text-3); font-weight:600; background:var(--c-bg); text-transform:uppercase; }
+.urgency-num {
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700;
+}
+.urgency-num-1 { background:var(--c-red-bg); color:var(--c-red); }
+.urgency-num-2 { background:var(--c-orange-bg); color:var(--c-orange); }
+.urgency-num-3 { background:var(--c-yellow-bg); color:var(--c-yellow); }
+.urgency-field { font-weight:600; font-size:0.9rem; }
+.urgency-status { font-size:0.82rem; color:var(--c-text-2); }
+.urgency-action { font-size:0.82rem; color:var(--c-text-2); }
+
+/* ========== 隐患预警 ========== */
+.risk-section { margin-bottom: 32px; }
+.risk-section:last-child { margin-bottom: 0; }
+.risk-section-title {
+  font-size: 0.85rem; font-weight: 700; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.risk-card {
+  background: var(--c-card); border-radius: var(--radius-sm); margin-bottom: 12px;
+  border: 1px solid var(--c-border); overflow: hidden;
+}
+.risk-card-header {
+  padding: 14px 18px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  font-weight: 600; font-size: 0.9rem; transition: background 0.2s;
+}
+.risk-card-header:hover { background: #f9fafb; }
+.risk-card-header .risk-tag { font-size: 0.7rem; }
+.risk-card-header .arrow { font-size: 0.7rem; color: var(--c-text-3); transition: transform 0.3s; }
+.risk-card.open .risk-card-header .arrow { transform: rotate(90deg); }
+
+.risk-card-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+.risk-card-body-inner { padding: 0 18px 16px; }
+.risk-detail-title { font-size: 0.8rem; color: var(--c-text-3); font-weight: 600; margin: 12px 0 6px; text-transform: uppercase; }
+.risk-detail-title:first-child { margin-top: 0; }
+.risk-detail-list { list-style: none; padding: 0; }
+.risk-detail-list li { font-size: 0.85rem; color: var(--c-text-2); padding: 3px 0; padding-left: 16px; position: relative; }
+.risk-detail-list li::before { content: ''; position: absolute; left: 0; top: 12px; width: 6px; height: 6px; border-radius: 50%; }
+.risk-detail-list.consequence li::before { background: var(--c-red); }
+.risk-detail-list.desc li::before { background: var(--c-orange); }
+
+/* 死循环 */
+.death-loop {
+  background: var(--c-red-bg); border: 1px solid var(--c-red-border); border-radius: var(--radius);
+  padding: 28px 24px; margin: 32px 0;
+}
+.death-loop-title { font-weight: 700; font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.loop-visual {
+  display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+  font-size: 0.85rem; font-weight: 600; color: var(--c-red); padding: 16px 0;
+}
+.loop-node {
+  background: var(--c-card); border: 2px solid var(--c-red-border); border-radius: var(--radius-xs);
+  padding: 8px 14px; text-align: center; min-width: 80px;
+}
+.loop-arrow { font-size: 1.2rem; color: var(--c-red); }
+.loop-note {
+  font-size: 0.82rem; color: var(--c-text-2); margin-top: 12px;
+  padding: 10px 14px; background: rgba(255,255,255,0.6); border-radius: var(--radius-xs);
+}
+.loop-note strong { color: var(--c-red); }
+
+/* 防线表格 */
+.defense-grid {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.defense-row {
+  display: flex; align-items: center; gap: 16px; background: var(--c-card);
+  border: 1px solid var(--c-border); border-radius: var(--radius-xs); padding: 14px 18px;
+}
+.defense-label { font-weight: 600; font-size: 0.85rem; min-width: 90px; flex-shrink: 0; }
+.defense-value { font-size: 0.85rem; color: var(--c-text-2); }
+
+/* ========== 四大模块 ========== */
+.module { margin-bottom: 20px; }
+.module:last-child { margin-bottom: 0; }
+.module-card {
+  background: var(--c-card); border: 1px solid var(--c-border); border-radius: var(--radius);
+  overflow: hidden;
+}
+.module-header {
+  padding: 20px 24px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: background 0.2s;
+}
+.module-header:hover { background: #f9fafb; }
+.module-header .module-icon { font-size: 1.3rem; }
+.module-header .module-title { font-weight: 700; font-size: 1rem; flex: 1; }
+.module-header .module-tag { font-size: 0.75rem; }
+.module-header .module-arrow { font-size: 0.7rem; color: var(--c-text-3); transition: transform 0.3s; }
+.module-card.open .module-header .module-arrow { transform: rotate(180deg); }
+
+.module-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+.module-body-inner { padding: 0 24px 24px; }
+
+/* 子内容样式 */
+.sub-block { margin-bottom: 24px; }
+.sub-block:last-child { margin-bottom: 0; }
+.sub-block h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 8px; color: var(--c-text); }
+.sub-block p { font-size: 0.85rem; color: var(--c-text-2); line-height: 1.7; }
+
+/* 进展列表 */
+.progress-list { list-style: none; padding: 0; }
+.progress-list li {
+  font-size: 0.85rem; color: var(--c-text-2); padding: 5px 0; padding-left: 24px; position: relative;
+}
+.progress-list li::before { position:absolute; left:0; font-size:0.8rem; }
+
+/* 数据表格 */
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+.data-table th {
+  text-align: left; font-weight: 600; color: var(--c-text-3); font-size: 0.78rem;
+  padding: 8px 12px; border-bottom: 1px solid var(--c-border); background: var(--c-bg);
+}
+.data-table td { padding: 8px 12px; border-bottom: 1px solid var(--c-border); color: var(--c-text-2); }
+.data-table tr:last-child td { border-bottom: none; }
+
+/* 破局方向 */
+.direction-list { list-style: none; padding: 0; counter-reset: dir; }
+.direction-list li {
+  counter-increment: dir; font-size: 0.88rem; color: var(--c-text-2);
+  padding: 8px 0 8px 36px; position: relative;
+}
+.direction-list li::before {
+  content: counter(dir); position: absolute; left: 0; top: 8px;
+  width: 24px; height: 24px; background: var(--c-primary); color: #fff;
+  border-radius: 6px; font-size: 0.75rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 模型展示 */
+.model-box {
+  background: var(--c-purple-bg); border: 1px solid var(--c-purple-border); border-radius: var(--radius-sm);
+  padding: 20px; margin: 12px 0;
+}
+.model-box .model-name { font-weight: 700; font-size: 0.95rem; color: var(--c-purple); margin-bottom: 10px; }
+.model-box p { font-size: 0.85rem; color: var(--c-text-2); line-height: 1.7; }
+.model-box .principle {
+  font-size: 0.82rem; color: var(--c-text-2); margin-top: 12px; padding: 10px;
+  background: rgba(255,255,255,0.7); border-radius: var(--radius-xs); font-style: italic;
+}
+
+/* 超能力条 */
+.power-list { display: flex; flex-direction: column; gap: 12px; }
+.power-item { }
+.power-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
+.power-label span:first-child { font-weight: 600; }
+.power-label span:last-child { color: var(--c-text-3); }
+.power-bar { height: 8px; background: var(--c-bg); border-radius: 100px; overflow: hidden; }
+.power-fill { height: 100%; border-radius: 100px; transition: width 1s ease; }
+.power-fill-9 { width: 90%; background: linear-gradient(90deg, var(--c-primary), var(--c-primary-lighter)); }
+.power-fill-8 { width: 80%; background: linear-gradient(90deg, var(--c-primary), var(--c-primary-lighter)); }
+.power-fill-7 { width: 70%; background: linear-gradient(90deg, var(--c-blue), #93c5fd); }
+.power-fill-6 { width: 60%; background: linear-gradient(90deg, var(--c-blue), #93c5fd); }
+.power-fill-4 { width: 40%; background: linear-gradient(90deg, var(--c-orange), var(--c-orange-border)); }
+.power-fill-3 { width: 30%; background: linear-gradient(90deg, var(--c-orange), var(--c-orange-border)); }
+
+.shortcut-list { list-style: none; padding: 0; }
+.shortcut-list li { font-size: 0.85rem; color: var(--c-text-2); padding: 4px 0; padding-left: 20px; position: relative; }
+.shortcut-list li::before { content: '⚠️'; position: absolute; left: 0; font-size: 0.75rem; }
+
+/* ========== 里程碑时间线 ========== */
+.timeline { position: relative; padding-left: 36px; }
+.timeline::before {
+  content: ''; position: absolute; left: 11px; top: 8px; bottom: 8px;
+  width: 2px; background: var(--c-primary-lighter); border-radius: 2px;
+}
+.timeline-item { position: relative; margin-bottom: 32px; }
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-dot {
+  position: absolute; left: -36px; top: 6px;
+  width: 24px; height: 24px; background: var(--c-card); border: 3px solid var(--c-primary); border-radius: 50%;
+}
+.timeline-date { font-size: 0.78rem; color: var(--c-text-3); margin-bottom: 4px; }
+.timeline-item h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+.timeline-sub { list-style: none; padding: 0; }
+.timeline-sub li {
+  font-size: 0.82rem; color: var(--c-text-2); padding: 2px 0 2px 16px; position: relative;
+}
+.timeline-sub li::before { content: ''; position: absolute; left: 0; top: 11px; width: 6px; height: 6px; border-radius: 50%; background: var(--c-primary-lighter); }
+
+/* ========== 行动清单 ========== */
+.action-group { margin-bottom: 24px; }
+.action-group:last-child { margin-bottom: 0; }
+.action-group-title {
+  font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.action-checklist { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.action-checklist li {
+  font-size: 0.85rem; color: var(--c-text-2); padding: 10px 14px 10px 40px;
+  background: var(--c-card); border: 1px solid var(--c-border); border-radius: var(--radius-xs);
+  position: relative; cursor: pointer; transition: all 0.2s;
+}
+.action-checklist li:hover { background: #f9fafb; }
+.action-checklist li::before {
+  content: ''; position: absolute; left: 14px; top: 14px;
+  width: 18px; height: 18px; border: 2px solid var(--c-border); border-radius: 4px;
+  transition: all 0.2s;
+}
+.action-checklist li.done { color: var(--c-text-3); text-decoration: line-through; }
+.action-checklist li.done::before {
+  background: var(--c-primary); border-color: var(--c-primary);
+  content: '✓'; color: #fff; font-size: 0.65rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ========== 哇塞时刻 ========== */
+.wow-list { display: flex; flex-direction: column; gap: 16px; }
+.wow-card {
+  background: var(--c-card); border: 1px solid var(--c-green-border); border-radius: var(--radius);
+  padding: 20px 22px; border-left: 4px solid var(--c-green);
+}
+.wow-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+.wow-card p { font-size: 0.85rem; color: var(--c-text-2); line-height: 1.7; }
+
+/* ========== Footer ========== */
+.footer {
+  text-align: center; padding: 40px 24px; font-size: 0.78rem; color: var(--c-text-3);
+  border-top: 1px solid var(--c-border);
+}
+.footer .demo-note {
+  margin-top: 10px; font-size: 0.72rem; color: var(--c-text-3); font-style: italic;
+}
+
+/* ========== 回到顶部 ========== */
+.back-top {
+  position: fixed; bottom: 28px; right: 28px; z-index: 100;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--c-primary); color: #fff; border: none;
+  font-size: 1.1rem; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  opacity: 0; transform: translateY(10px); transition: all 0.3s;
+  display: flex; align-items: center; justify-content: center;
+}
+.back-top.visible { opacity: 1; transform: translateY(0); }
+.back-top:hover { background: var(--c-primary-light); }
+
+/* ========== 响应式 ========== */
+@media (max-width: 600px) {
+  section { padding: 48px 0; }
+  .status-grid { grid-template-columns: 1fr; }
+  .urgency-row { grid-template-columns: 36px 1fr; }
+  .urgency-row .urgency-action { grid-column: 1 / -1; padding-top: 6px; }
+  .urgency-row.header .urgency-action { display: none; }
+  .defense-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .module-header { padding: 16px 18px; }
+  .module-body-inner { padding: 0 18px 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 案例展示 Banner -->
+<div class="case-banner">📋 案例展示 · 以下人物及数据均为虚构，仅供参考</div>
+
+<!-- 阅读进度条 -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- 顶部导航 -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <span class="topnav-logo">🎯 人生看板</span>
+    <a class="topnav-link" href="#status">状态</a>
+    <a class="topnav-link" href="#urgency">紧急</a>
+    <a class="topnav-link" href="#risk">隐患</a>
+    <a class="topnav-link" href="#health">健康</a>
+    <a class="topnav-link" href="#finance">财务</a>
+    <a class="topnav-link" href="#love">关系</a>
+    <a class="topnav-link" href="#career">事业</a>
+    <a class="topnav-link" href="#growth">认知</a>
+    <a class="topnav-link" href="#actions">行动</a>
+  </div>
+</nav>
+
+<!-- ==================== Hero ==================== -->
+<div class="hero">
+  <div class="hero-date">📊 2026年5月 · 现状总览</div>
+  <h1>林小川 · 人生操作系统</h1>
+  <p class="tagline">看见自己，是一切改变的起点。</p>
+  <div class="scroll-hint">↓ 向下滚动，查看你的全貌</div>
+</div>
+
+<!-- ==================== 生命状态仪表盘 ==================== -->
+<section id="status">
+  <div class="container">
+    <div class="section-label">🧭 当前状态</div>
+    <h2 class="section-title">生命状态仪表盘</h2>
+    <div class="status-grid">
+      <div class="status-card">
+        <div class="icon">😊</div>
+        <div class="label">情绪状态</div>
+        <div class="name">整体平稳，偶有焦虑</div>
+        <span class="tag tag-green">🟢 良好</span>
+        <div class="desc">正念练习有帮助，波动幅度在缩小。</div>
+      </div>
+      <div class="status-card">
+        <div class="icon">🦴</div>
+        <div class="label">健康状态</div>
+        <div class="name">腰椎劳损，久坐职业病</div>
+        <span class="tag tag-orange">🟠 需关注</span>
+        <div class="desc">画师职业通病，需系统康复。</div>
+      </div>
+      <div class="status-card">
+        <div class="icon">💰</div>
+        <div class="label">财务状态</div>
+        <div class="name">月入 6k-12k 波动，存款 3 万</div>
+        <span class="tag tag-yellow">🟡 不稳定</span>
+        <div class="desc">自由职业收入波动大，缺乏稳定管道。</div>
+      </div>
+      <div class="status-card">
+        <div class="icon">💕</div>
+        <div class="label">亲密关系</div>
+        <div class="name">异地恋，每周视频</div>
+        <span class="tag tag-yellow">🟡 维护中</span>
+        <div class="desc">距离是挑战，但沟通质量在提升。</div>
+      </div>
+      <div class="status-card">
+        <div class="icon">🎨</div>
+        <div class="label">事业方向</div>
+        <div class="name">插画师 → 个人品牌创作者</div>
+        <span class="tag tag-orange">🟠 转型中</span>
+        <div class="desc">正在从接单模式转向内容驱动的品牌模式。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 紧急度排名 ==================== -->
+<section id="urgency" class="section-alt">
+  <div class="container">
+    <div class="section-label">🔴 优先级</div>
+    <h2 class="section-title">紧急度排序</h2>
+    <div class="urgency-table">
+      <div class="urgency-row header">
+        <div></div>
+        <div>领域</div>
+        <div>现状</div>
+        <div>行动方向</div>
+      </div>
+      <div class="urgency-row">
+        <div class="urgency-num urgency-num-1">1</div>
+        <div class="urgency-field">💰 财务</div>
+        <div class="urgency-status">收入波动大，缺乏稳定来源</div>
+        <div class="urgency-action">建立多元收入管道</div>
+      </div>
+      <div class="urgency-row">
+        <div class="urgency-num urgency-num-2">2</div>
+        <div class="urgency-field">🦴 健康</div>
+        <div class="urgency-status">腰椎劳损 / 久坐问题</div>
+        <div class="urgency-action">每日康复训练+站立办公</div>
+      </div>
+      <div class="urgency-row">
+        <div class="urgency-num urgency-num-3">3</div>
+        <div class="urgency-field">🎨 事业方向</div>
+        <div class="urgency-status">转型方向待验证</div>
+        <div class="urgency-action">输出 3 个作品验证市场</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 隐患预警 ==================== -->
+<section id="risk">
+  <div class="container">
+    <div class="section-label">⚠️ 风险地图</div>
+    <h2 class="section-title">未来隐患预警</h2>
+
+    <!-- 第一梯队 -->
+    <div class="risk-section">
+      <div class="risk-section-title"><span class="tag tag-red">第一梯队</span> 最高风险</div>
+      <div class="risk-card">
+        <div class="risk-card-header" onclick="toggleRisk(this)">
+          <span>1. 收入断崖风险 <span class="risk-tag tag tag-red">🔴</span></span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="risk-card-body">
+          <div class="risk-card-body-inner">
+            <div class="risk-detail-title">风险描述</div>
+            <ul class="risk-detail-list desc">
+              <li>自由插画市场波动大，淡季可能连续两个月无单</li>
+              <li>3 万存款仅能支撑 3-5 个月基本生活</li>
+              <li>转型期收入可能进一步下降</li>
+            </ul>
+            <div class="risk-detail-title">触发后果</div>
+            <ul class="risk-detail-list consequence">
+              <li>被迫接受低价值项目，消耗创作精力</li>
+              <li>转型计划被打断，回到接单循环</li>
+              <li>焦虑影响创作质量和身心健康</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-card-header" onclick="toggleRisk(this)">
+          <span>2. 腰椎问题恶化 <span class="risk-tag tag tag-red">🔴</span></span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="risk-card-body">
+          <div class="risk-card-body-inner">
+            <div class="risk-detail-title">风险描述</div>
+            <ul class="risk-detail-list desc">
+              <li>日均坐姿工作 8-10 小时</li>
+              <li>已出现腰椎间盘膨出早期症状</li>
+              <li>康复训练执行不稳定</li>
+            </ul>
+            <div class="risk-detail-title">触发后果</div>
+            <ul class="risk-detail-list consequence">
+              <li>严重时无法工作，收入归零</li>
+              <li>长期疼痛影响生活质量和创作状态</li>
+              <li>康复周期长，治疗费用不菲</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 第二梯队 -->
+    <div class="risk-section">
+      <div class="risk-section-title"><span class="tag tag-orange">第二梯队</span> 中高风险</div>
+      <div class="risk-card">
+        <div class="risk-card-header" onclick="toggleRisk(this)">
+          <span>3. 个人品牌方向迷失 <span class="risk-tag tag tag-orange">🟠</span></span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="risk-card-body">
+          <div class="risk-card-body-inner">
+            <div class="risk-detail-title">风险描述</div>
+            <ul class="risk-detail-list desc">
+              <li>「插画+内容」的定位太宽泛</li>
+              <li>同时尝试短视频、文章、课程，精力分散</li>
+            </ul>
+            <div class="risk-detail-title">触发后果</div>
+            <ul class="risk-detail-list consequence">
+              <li>每个方向都半途而废</li>
+              <li>半年后仍在原地，信心受挫</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-card-header" onclick="toggleRisk(this)">
+          <span>4. 异地关系疏离 <span class="risk-tag tag tag-orange">🟠</span></span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="risk-card-body">
+          <div class="risk-card-body-inner">
+            <div class="risk-detail-title">风险描述</div>
+            <ul class="risk-detail-list desc">
+              <li>异地 2 年，见面频率每月 1 次</li>
+              <li>日常沟通趋于表面化</li>
+              <li>事业压力下情绪容易波及关系</li>
+            </ul>
+            <div class="risk-detail-title">触发后果</div>
+            <ul class="risk-detail-list consequence">
+              <li>情感连接逐渐稀释</li>
+              <li>矛盾累积爆发时更难修复</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-card-header" onclick="toggleRisk(this)">
+          <span>5. 创作倦怠循环 <span class="risk-tag tag tag-orange">🟠</span></span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="risk-card-body">
+          <div class="risk-card-body-inner">
+            <div class="risk-detail-title">风险描述</div>
+            <ul class="risk-detail-list desc">
+              <li>商业插画项目消耗创作热情</li>
+              <li>转型期需要额外时间输出内容</li>
+              <li>工作与创作的边界模糊</li>
+            </ul>
+            <div class="risk-detail-title">触发后果</div>
+            <ul class="risk-detail-list consequence">
+              <li>创作热情枯竭，灵感消失</li>
+              <li>对画笔产生抵触心理</li>
+              <li>陷入「越做越累，越累越做不好」的死循环</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 核心死循环 -->
+    <div class="death-loop">
+      <div class="death-loop-title">💀 核心死循环</div>
+      <div class="loop-visual">
+        <div class="loop-node">收入不稳定</div>
+        <span class="loop-arrow">→</span>
+        <div class="loop-node">接更多商业单</div>
+        <span class="loop-arrow">→</span>
+        <div class="loop-node">挤压创作时间</div>
+        <span class="loop-arrow">→</span>
+        <div class="loop-node">品牌转型搁置</div>
+        <span class="loop-arrow">→</span>
+        <div class="loop-node">无法建立稳定收入</div>
+        <span class="loop-arrow">→</span>
+        <div class="loop-node">收入不稳定</div>
+      </div>
+      <div class="loop-note">
+        打破循环的关键不在于「接更多单」，而在于<strong>用一部分时间坚定投入品牌建设</strong>。<br>哪怕每周只留 10 小时，也比永远不开始强。
+      </div>
+    </div>
+
+    <!-- 防线措施 -->
+    <div class="risk-section" style="margin-top: 32px;">
+      <div class="risk-section-title">🛡️ 防线措施</div>
+      <div class="defense-grid">
+        <div class="defense-row">
+          <span class="defense-label tag tag-red">收入断崖</span>
+          <span class="defense-value">设定最低存款警戒线 1.5 万，一旦触及优先保障基本生活</span>
+        </div>
+        <div class="defense-row">
+          <span class="defense-label tag tag-red">腰椎恶化</span>
+          <span class="defense-value">站立办公+每 45 分钟起身活动，康复训练不可妥协</span>
+        </div>
+        <div class="defense-row">
+          <span class="defense-label tag tag-orange">方向迷失</span>
+          <span class="defense-value">每月输出 1 篇复盘，对照目标调整方向</span>
+        </div>
+        <div class="defense-row">
+          <span class="defense-label tag tag-orange">关系疏离</span>
+          <span class="defense-value">保持每周 1 次深度视频通话 + 每月 1 次见面</span>
+        </div>
+        <div class="defense-row">
+          <span class="defense-label tag tag-orange">创作倦怠</span>
+          <span class="defense-value">设定「纯粹创作时间」每周 4 小时，不做商业项目</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 四大模块 ==================== -->
+<section id="health" class="section-alt">
+  <div class="container">
+    <div class="section-label">🏥 底层系统</div>
+    <h2 class="section-title">健康 · 财务 · 关系 · 事业</h2>
+
+    <!-- 健康 -->
+    <div class="module">
+      <div class="module-card">
+        <div class="module-header" onclick="toggleModule(this)">
+          <span class="module-icon">🦴</span>
+          <span class="module-title">健康状态 — 底层 OS</span>
+          <span class="module-tag tag tag-orange">🟠 需关注</span>
+          <span class="module-arrow">▼</span>
+        </div>
+        <div class="module-body">
+          <div class="module-body-inner">
+            <div class="sub-block">
+              <h4>当前状态</h4>
+              <p>主要问题：腰椎间盘膨出（L4-L5）、肩颈僵硬、腱鞘炎早期。日均久坐 8-10 小时，运动量不足。</p>
+            </div>
+            <div class="sub-block">
+              <h4>近期进展</h4>
+              <ul class="progress-list">
+                <li>✅ 已配置升降桌，站立办公占比约 30%</li>
+                <li>✅ 购买了人体工学椅</li>
+                <li>⏳ 康复训练执行不稳定，每周仅 1-2 次</li>
+                <li>⏳ 游泳计划尚未启动</li>
+              </ul>
+            </div>
+            <div class="sub-block">
+              <h4>康复方案</h4>
+              <table class="data-table">
+                <thead><tr><th>项目</th><th>频率</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td>核心肌群训练</td><td>每周 3 次</td><td><span class="tag tag-yellow">⏳ 不达标</span></td></tr>
+                  <tr><td>麦肯基腰椎练习</td><td>每日</td><td><span class="tag tag-orange">⚠️ 偶尔做</span></td></tr>
+                  <tr><td>游泳/水中康复</td><td>每周 1 次</td><td><span class="tag tag-yellow">💡 待启动</span></td></tr>
+                  <tr><td>站立办公</td><td>每日 ≥4h</td><td><span class="tag tag-green">✅ 执行中</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-block">
+              <h4>饮食管理</h4>
+              <table class="data-table">
+                <thead><tr><th>餐次</th><th>执行情况</th><th>评价</th></tr></thead>
+                <tbody>
+                  <tr><td>早餐</td><td>燕麦+鸡蛋+豆浆</td><td><span class="tag tag-green">✅ 稳定</span></td></tr>
+                  <tr><td>午餐</td><td>外卖（盖饭/面居多）</td><td><span class="tag tag-yellow">⚠️ 油盐偏高</span></td></tr>
+                  <tr><td>晚餐</td><td>自己做饭约 50% 日子</td><td><span class="tag tag-yellow">⚠️ 待提高</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 财务 -->
+    <div class="module" id="finance">
+      <div class="module-card">
+        <div class="module-header" onclick="toggleModule(this)">
+          <span class="module-icon">💰</span>
+          <span class="module-title">财务状态 — 最紧迫</span>
+          <span class="module-tag tag tag-yellow">🟡 不稳定</span>
+          <span class="module-arrow">▼</span>
+        </div>
+        <div class="module-body">
+          <div class="module-body-inner">
+            <div class="sub-block">
+              <h4>核心数据</h4>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:8px 0;">
+                <div style="text-align:center;padding:16px;background:var(--c-yellow-bg);border-radius:var(--radius-xs);">
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--c-yellow);">8.2k</div>
+                  <div style="font-size:0.78rem;color:var(--c-text-2);">月均收入</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:var(--c-green-bg);border-radius:var(--radius-xs);">
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--c-green);">3万</div>
+                  <div style="font-size:0.78rem;color:var(--c-text-2);">存款</div>
+                </div>
+                <div style="text-align:center;padding:16px;background:var(--c-orange-bg);border-radius:var(--radius-xs);">
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--c-orange);">4.5</div>
+                  <div style="font-size:0.78rem;color:var(--c-text-2);">可支撑月数</div>
+                </div>
+              </div>
+            </div>
+            <div class="sub-block">
+              <h4>核心洞察</h4>
+              <div style="background:var(--c-yellow-bg);border:1px solid var(--c-yellow-border);border-radius:var(--radius-xs);padding:14px;font-size:0.85rem;color:var(--c-text-2);line-height:1.7;">
+                收入来源单一（90% 来自外包插画），抗风险能力弱。转型期需要建立新的收入管道，但存量资金仅支撑约 4 个月。
+              </div>
+            </div>
+            <div class="sub-block">
+              <h4>破局方向</h4>
+              <ol class="direction-list">
+                <li>开设插画课程（在线录播），建立被动收入</li>
+                <li>运营社交媒体账号，积累个人品牌资产</li>
+                <li>筛选高价值长期合作客户，减少零散接单</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 亲密关系 -->
+    <div class="module" id="love">
+      <div class="module-card">
+        <div class="module-header" onclick="toggleModule(this)">
+          <span class="module-icon">💕</span>
+          <span class="module-title">亲密关系</span>
+          <span class="module-tag tag tag-yellow">🟡 维护中</span>
+          <span class="module-arrow">▼</span>
+        </div>
+        <div class="module-body">
+          <div class="module-body-inner">
+            <div class="sub-block">
+              <h4>关系概况</h4>
+              <p>异地恋，2 年。她在杭州做产品经理。<br>每月见面 1 次，日常靠微信+每周视频维持。</p>
+            </div>
+            <div class="sub-block">
+              <div class="model-box">
+                <div class="model-name">🧠 原创思维模型：「异地不是距离，是节奏差异」</div>
+                <p><strong>物理距离 ≠ 情感距离：</strong>异地恋的真正挑战不是见不到面，而是两个人的生活节奏和成长速度不同步。当一方快速变化时，另一方无法同步感知。</p>
+                <div class="principle">
+                  维系异地恋的核心不是「更多联系」，而是<strong>「更高的沟通密度」</strong>：<br>
+                  不是说更多话，而是每句话都带着完整的情绪和背景。<br>
+                  <strong>低频率 + 高密度 > 高频率 + 低密度。</strong>
+                </div>
+              </div>
+            </div>
+            <div class="sub-block">
+              <h4>近期沟通</h4>
+              <ul class="progress-list">
+                <li>📝 讨论了各自的事业规划时间线</li>
+                <li>📝 约定每月至少一次「深入对话」不聊日常</li>
+                <li>📝 开始共享日历，了解彼此的节奏和压力点</li>
+              </ul>
+            </div>
+            <div class="sub-block">
+              <h4>未来方向</h4>
+              <ul class="progress-list">
+                <li>🔄 半年内讨论是否搬到同一城市</li>
+                <li>🔄 尝试「协同创作」——一起做一个项目</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 事业 -->
+    <div class="module" id="career">
+      <div class="module-card">
+        <div class="module-header" onclick="toggleModule(this)">
+          <span class="module-icon">🎨</span>
+          <span class="module-title">事业方向 — 转型中</span>
+          <span class="module-tag tag tag-orange">🟠 转型中</span>
+          <span class="module-arrow">▼</span>
+        </div>
+        <div class="module-body">
+          <div class="module-body-inner">
+            <div class="sub-block">
+              <h4>核心方向</h4>
+              <p style="font-weight:700;color:var(--c-text);font-size:1rem;">「插画 + 内容」个人品牌创作者</p>
+            </div>
+            <div class="sub-block">
+              <h4>心愿时间线</h4>
+              <table class="data-table">
+                <thead><tr><th>周期</th><th>心愿</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="tag tag-red">短期 3个月</span></td><td>上线第一套插画课程，验证变现可能性</td></tr>
+                  <tr><td><span class="tag tag-blue">中期 1年</span></td><td>稳定月入 1.5w+，其中 50% 来自自主品牌收入</td></tr>
+                  <tr><td><span class="tag tag-purple">长期 3年</span></td><td>拥有完整的插画 IP 体系 + 课程 + 出版物</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-block">
+              <h4>超能力雷达</h4>
+              <div class="power-list">
+                <div class="power-item">
+                  <div class="power-label"><span>绘画技法</span><span>9级 · 专业</span></div>
+                  <div class="power-bar"><div class="power-fill power-fill-9"></div></div>
+                </div>
+                <div class="power-item">
+                  <div class="power-label"><span>审美与风格</span><span>8级 · 前10%</span></div>
+                  <div class="power-bar"><div class="power-fill power-fill-8"></div></div>
+                </div>
+                <div class="power-item">
+                  <div class="power-label"><span>内容运营</span><span>4级</span></div>
+                  <div class="power-bar"><div class="power-fill power-fill-4"></div></div>
+                </div>
+              </div>
+              <div style="margin-top:12px;padding:12px;background:var(--c-primary-bg);border-radius:var(--radius-xs);font-size:0.85rem;font-weight:600;color:var(--c-primary);text-align:center;">
+                绘画技法（9级）× 审美风格（8级）= 作品自带传播力
+              </div>
+            </div>
+            <div class="sub-block">
+              <h4>短板识别</h4>
+              <ul class="shortcut-list">
+                <li>缺少商业思维，不擅长定价和谈判</li>
+                <li>内容运营能力弱（4级），输出不稳定</li>
+                <li>容易陷入完美主义，作品迟迟不发布</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 认知成长 ==================== -->
+<section id="growth">
+  <div class="container">
+    <div class="section-label">🧠 原创模型</div>
+    <h2 class="section-title">认知成长</h2>
+
+    <div class="model-box" style="margin-bottom:24px;">
+      <div class="model-name">2026年5月原创：「画笔 vs 键盘」—— 创作者的两只手</div>
+      <table class="data-table" style="margin-top:12px;">
+        <thead><tr><th>维度</th><th>画笔（视觉创作）</th><th>键盘（文字输出）</th></tr></thead>
+        <tbody>
+          <tr><td>优势</td><td>直观、情感冲击力强</td><td>结构化、可搜索、可复制</td></tr>
+          <tr><td>传播方式</td><td>社交平台分享</td><td>搜索引擎 + 推荐算法</td></tr>
+          <tr><td>变现路径</td><td>单次项目 / 周边</td><td>课程 / 知识付费</td></tr>
+          <tr><td>长期资产</td><td>作品集 / IP 形象</td><td>方法论 / 教程体系</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:20px;">
+      <h4 style="margin-bottom:12px;">自我反思</h4>
+      <ul class="progress-list">
+        <li>❌ 过去只依赖画笔，忽略了文字的力量</li>
+        <li>❌ 完美主义导致很多作品完成了却不发布</li>
+        <li>✅ 未来：画笔吸引注意，键盘构建信任，两者缺一不可</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 里程碑 ==================== -->
+<section class="section-alt">
+  <div class="container">
+    <div class="section-label">📅 成长轨迹</div>
+    <h2 class="section-title">里程碑时间线</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2026-03-15</div>
+        <h3>🎯 首次建档完成</h3>
+        <ul class="timeline-sub">
+          <li>11 系统初始数据录入</li>
+          <li>能力连续轴确认（绘画技法 9 级，内容运营 4 级）</li>
+          <li>核心挑战识别（健康 + 收入结构）</li>
+        </ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">2026-05-10</div>
+        <h3>🚀 转型启动</h3>
+        <ul class="timeline-sub">
+          <li>开始在小红书分享创作过程</li>
+          <li>第一条笔记获得 2.3k 赞</li>
+          <li>原创思维模型「画笔 vs 键盘」诞生</li>
+          <li>看板生成</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 下一步行动 ==================== -->
+<section id="actions">
+  <div class="container">
+    <div class="section-label">✅ 行动清单</div>
+    <h2 class="section-title">下一步行动</h2>
+
+    <div class="action-group">
+      <div class="action-group-title">⏰ 即时行动（本周）</div>
+      <ul class="action-checklist" onclick="toggleCheck(event)">
+        <li>发布 1 篇创作过程笔记到小红书</li>
+        <li>完成本周 3 次核心肌群训练</li>
+        <li>和女友进行一次深度视频通话</li>
+      </ul>
+    </div>
+    <div class="action-group">
+      <div class="action-group-title">📅 短期行动（本月）</div>
+      <ul class="action-checklist" onclick="toggleCheck(event)">
+        <li>规划插画入门课的课程大纲</li>
+        <li>开始每周 3 次站立办公+每日麦肯基练习</li>
+        <li>筛选 2 个长期合作的优质客户</li>
+      </ul>
+    </div>
+    <div class="action-group">
+      <div class="action-group-title">🎯 中期目标（本季度）</div>
+      <ul class="action-checklist" onclick="toggleCheck(event)">
+        <li>上线第一套插画课程并售出 20 份</li>
+        <li>小红书粉丝突破 5000</li>
+        <li>健康状态明显改善，腰椎不适频率降低 50%</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 哇塞时刻 ==================== -->
+<section class="section-alt">
+  <div class="container">
+    <div class="section-label">🏆 高光时刻</div>
+    <h2 class="section-title">近期哇塞时刻</h2>
+    <div class="wow-list">
+      <div class="wow-card">
+        <h3>🎨 第一条创作笔记火了</h3>
+        <p>在小红书发布了「从 0 到 1 画一幅商业插画」的过程拆解，24 小时内获得 2300+ 赞、400+ 收藏。第一次感受到内容驱动的力量。</p>
+      </div>
+      <div class="wow-card">
+        <h3>🧠 「画笔 vs 键盘」模型诞生</h3>
+        <p>在梳理事业方向时，突然意识到过去只用画笔赚钱是巨大的浪费。文字输出可以构建信任、沉淀方法论、创造被动收入。这个认知改变了整个商业策略。</p>
+      </div>
+      <div class="wow-card">
+        <h3>💕 首次「协同创作」尝试</h3>
+        <p>和女友一起做了一次「我们的关系地图」视觉化项目，她画流程图、我画插画，成品挂在家里墙上。关系中的创造力被激活。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== Footer ==================== -->
+<div class="footer">
+  🎯 人生操作系统 · 看见自己，是一切改变的起点<br>
+  <span style="margin-top:6px;display:inline-block;">下次更新：每月定期盘点 或 重大变化后</span>
+  <div class="demo-note">⚠️ 本页面为案例展示，所有人物及数据均为虚构</div>
+</div>
+
+<!-- 回到顶部 -->
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0})">↑</button>
+
+<script>
+// 阅读进度
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('backTop').classList.toggle('visible', h.scrollTop > 400);
+});
+
+// 风险卡片折叠
+function toggleRisk(header) {
+  const card = header.parentElement;
+  const body = card.querySelector('.risk-card-body');
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  body.style.maxHeight = isOpen ? null : body.scrollHeight + 'px';
+}
+
+// 模块折叠
+function toggleModule(header) {
+  const card = header.parentElement;
+  const body = card.querySelector('.module-body');
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  body.style.maxHeight = isOpen ? null : body.scrollHeight + 'px';
+}
+
+// 复选框
+function toggleCheck(e) {
+  if (e.target.tagName === 'LI') {
+    e.target.classList.toggle('done');
+  }
+}
+</script>
+</body>
+</html>
